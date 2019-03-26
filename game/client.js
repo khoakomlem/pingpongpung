@@ -18,9 +18,9 @@ $('#create').click(()=>{
 			inputPlaceholder: t
 		})
 		if (a){
-			if (a>4 || a<2)
-				getMax("1~4!");
-			if (a>1 && a<5){
+			if (a>2 || a<2)
+				getMax("2 please! (3~4 ko biết code sao :v)");
+			if (a>1 && a<3){
 				max=a;
 				resizeCanvas(window.innerWidth,window.innerHeight);
 				socket.emit('create', max, window.innerWidth, window.innerHeight);
@@ -29,10 +29,11 @@ $('#create').click(()=>{
 			}
 	
 		}
-	})("Max players: (<5)");
+	})("Max players: (<3)");
 });	
 
 socket.on('success', (wid,hei)=>{
+	socket.emit('move','');
 	resizeCanvas(wid,hei);
 	Width=wid;
 	Height=hei;

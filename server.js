@@ -3,7 +3,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var path = require('path');
 // info var
-var rooms={}, joined=[], names=[], idroom=[], idsockets=[], ship=[], ball={}, score=[], restart=[];
+var rooms={}, joined=[], names=[], idroom=[], idsockets=[], ship=[], ball={}, score=[], restart=[], timeout=[];
 // game var
 var speedu, speedl, up=true, left=true, x, y;
 const random = require('random')
@@ -29,14 +29,16 @@ io.on('connection', function(socket){
         delete idsockets[idroom[socket.id]];
         delete rooms[idroom[socket.id]];
         delete names[socket.id];
-        delete ball[socket.id];
+        delete ball[idroom[socket.id]];
         delete score[socket.id];
+        delete timeout[idroom[socket.id]];
         io.emit('rooom',rooms);
     })
 
     socket.on('exit', ()=>{
         socket.leave(idroom[socket.id]);
         delete joined[socket.id];
+        score[socket.id]=0;
     })
 
     socket.on('name', name=>{
@@ -61,12 +63,12 @@ io.on('connection', function(socket){
         rooms[id].status++;
         io.emit('rooom',rooms);
         ship[socket.id]={
-            x:rooms[id].width/2
+            x:rooms[id].width/2-60
         }
         if (rooms[id].status==rooms[id].max){
             io.to(id).emit('success', rooms[id].width, rooms[id].height);      
             restart[id]=true;
-            setTimeout(()=>restart[id]=false,2000);   
+            timeout[id]=0;  
             ball[id]={
                 x:rooms[id].width/2,
                 y:rooms[id].height/2,
@@ -77,6 +79,7 @@ io.on('connection', function(socket){
                 swidth:rooms[id].width,
                 sheight:rooms[id].height
             }
+            timeout[id]=0;
 
         }
     });
@@ -98,12 +101,12 @@ io.on('connection', function(socket){
         try{
         switch (s){
             case 'a':
-                ship[socket.id].x-=10;
+                ship[socket.id].x-=20;
                 if (ship[socket.id].x<0)
                     ship[socket.id].x=0;
                 break;
             case 'd':
-                ship[socket.id].x+=10;
+                ship[socket.id].x+=20;
                 if (ship[socket.id].x+120>rooms[idroom[socket.id]].width)
                     ship[socket.id].x=rooms[idroom[socket.id]].width-121;
                 break;
@@ -124,7 +127,15 @@ http.listen(3000, function(){
 });
 
 setInterval(()=>{
+    
     for (var i in ball){
+        try{
+            if (restart[i])
+                timeout[i]++;
+            if (timeout[i]>100){
+                timeout[i]=0;
+                restart[i]=false;
+            }
         if (!restart[i]){
             if (ball[i].left) ball[i].x-=ball[i].speedl;
             if (!ball[i].left) ball[i].x+=ball[i].speedl;
@@ -147,7 +158,6 @@ setInterval(()=>{
             ball[i].y=rooms[i].height/2;
             ball[i].x=rooms[i].width/2;
             restart[i]=true;
-            setTimeout(()=>restart[i]=false,1500);
             io.to(i).emit('score',score[idsockets[i][0]],idsockets[i][0]);
         }
         if (ball[i].y+20>=rooms[i].height){
@@ -156,7 +166,6 @@ setInterval(()=>{
             ball[i].y=rooms[i].height/2;
             ball[i].x=rooms[i].width/2;
             restart[i]=true;
-            setTimeout(()=>restart[i]=false,1500);
             score[idsockets[i][1]]++;
             io.to(i).emit('score',score[idsockets[i][1]],idsockets[i][1]);
         }
@@ -166,7 +175,7 @@ setInterval(()=>{
                 if (ball[i].y+20>=rooms[i].height-60 && ball[i].y<=rooms[i].height-40 && ball[i].x+20>=ship[id].x && ball[i].x<=ship[id].x+120){
                     ball[i].y=rooms[i].height-80;
                     ball[i].up=true;
-                    ball[i].speedl=random.float(0,3);
+                    ball[i].speedl=random.float(0,5);
 
                 }
             } else {
@@ -182,5 +191,8 @@ setInterval(()=>{
 
         }
         io.to(i).emit('ball',ball[i],i);
+        }
+        catch(e){console.log(e)}
     }
+
 },10)

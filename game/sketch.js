@@ -1,25 +1,12 @@
-var count=0, mex=-100, himx=-100, loop, key, ballx=-100, bally=-100, myscore=0, himscore=0;
+var count=0, mex=-100, himx=0, loop, key, ballx=-100, bally=-100, myscore=0, himscore=0;
 
 function preload(){
-	document.addEventListener("keydown", (e)=>{
-		clearInterval(loop);
-		key=e.key;
-		loop=setInterval(()=>{
-			if (key=="a" || key=="A")
-				socket.emit('move','a')
-			if (key=="d" || key=="D")
-				socket.emit('move','d');
-		},7);
-		
-	})
-	document.addEventListener("keyup", ()=>{
-		clearInterval(loop);
-		socket.emit('move','');
-	})
 }
 
 function setup(){
 	var canv=createCanvas(window.innerWidth, window.innerHeight);
+	himx=width/2-60;
+	mex=width/2-60;
 	canv.parent('screen2');
   	textSize(40);
   	textAlign(CENTER, CENTER);
@@ -64,4 +51,10 @@ function draw(){
 	textAlign(CENTER);
 	text(myscore, width/2, height-150);
 	text(himscore, width/2, 130);
+	if (keyIsDown(LEFT_ARROW)){
+		socket.emit('move','a')
+	} else
+	if (keyIsDown(RIGHT_ARROW)){
+		socket.emit('move','d')
+	}
 }

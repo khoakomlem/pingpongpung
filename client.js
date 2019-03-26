@@ -22,7 +22,6 @@ $('#create').click(()=>{
 				getMax("1~4!");
 			if (a>1 && a<5){
 				max=a;
-				resizeCanvas(window.innerWidth,window.innerHeight);
 				socket.emit('create', max, window.innerWidth, window.innerHeight);
 				socket.emit('join', socket.id);
 				$('#screen1').stop().slideUp(1000,'', ()=>{$('#screen2').append('<h2 id="t" style="position:fixed; top:10px;left:10px; color:white" align="center">Đang chờ người chơi . . .<h2>');$('#screen2').stop().slideDown()});	
